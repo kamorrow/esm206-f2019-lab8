@@ -121,4 +121,111 @@ ggplot() +
 
 **Figure 1.** Flipper length (mm) for females of three penguin species (Adelie, Chinstrap, Gentoo) observed at Palm,er Station LTER, Antarctica.  Grey points indicate individual flipper lengths, red dots indicate group memes, error bars indicate $\pm$ 1 standard deviation. Data Source:
 
+# 6. One-way ANOVA
+
+Is there a significant difference in mean flipper length for female penguins between the three species (Adelie, Chinstrap, Gentoo)?
+
+```{r}
+penguin_aov <-  aov(flipper_length_mm ~ species, data = penguin_f)
+
+summary(penguin_aov)
+
+```
+h0: all groups are drawn from populations with the same mean
+hA: (at least two) means differ from each other
+
+**High F value:** spread between groups is very large compared to the spread within each group
+**Low p value (Pr(>F)):** It is very unlikely that these groups are drawn from populations with the same mean.
+
+The mean flipper lengths for females of the three species are not equal.
+
+Which ones differ signifcantly?
+
+We need a post-hoc pairwaise comparison
+
+# 7. Tukey's HSD
+Tukey's is a pretty conservative post-hoc test
+
+```{r}
+TukeyHSD(penguin_aov)
+```
+We're most interested in the p adj (adjusted p value):
+
+h0: no significant difference in means
+
+Conclusion: One-way ANOVA with post-hoc Tueky's HSD reveals significant differences in mean flipper length across all species (Gentoo, mean = ; Chinstrap, mean = ; Adelie, mean = ) (F(df) = , p< 0.001, for all pairwise comparisons)
+
+**NOTE** This alone is not terribly interesting wrt means comparison
+
+# 7 . Making nicer tables (with proportions)
+
+This is going to use vast simplications of the data for the purposes of learning
+```{r}
+party_relig <- gss_cat %>%
+  filter(partyid %in% c("Strong republican", "Strong democrat")) %>%
+  filter(relig %in% c("None", "Catholic")) %>%
+  count(partyid, relig)
+
+# Contingency table: uses two variables, one in rows, one in columns
+party_relig_table <- party_relig %>%
+  pivot_wider(names_from = relig, values_from = n)
+```
+
+# 8. Make a nice table of proportions using janitor::adorn_*
+
+```{r}
+party_relig_props <- party_relig_table %>%
+  janitor::adorn_percentages(denominator = "row") %>% # direction of question matters!
+  adorn_pct_formatting(digits = 1) %>%
+  adorn_ns(position = "front")
+
+party_relig_props # looks sad, bummer
+
+kable(party_relig_props) %>%
+  kable_styling()
+
+```
+
+- Are political and religious affiliations independent from each other?
+
+-  Is there a significant association between political association and religious association?
+
+- Is there a signficant effect of political association on religious affiliation? # careful here... this could imply causal direction)
+
+- Is there a signifcant difference in religious affiliation between strong republicans and strong democrats?
+
+Chi-squared
+```{r}
+# make contingency table tha tonly contains counts
+
+chi_counts <- party_relig_table %>%
+  select(-partyid)
+
+chi_counts
+```
+
+h0:
+
+- there is no significant association between party affiliation and relig aff
+- there is not signifcant difference in relig aff between the two party groups
+- party and relig aff are independent
+(I'm a strong, independent party affiliation and I don't need no religious affiliation)
+
+```{r}
+my_party_chi <-  chisq.test(chi_counts)
+
+my_party_chi
+
+```
+
+Conclusion:
+
+- there is a significant difference in religious affiliation (none, Catholic) between strong republicans and strong dems ($\chi^2$ = ..., p < 0.001)
+
+- there is significant association between party ID and religious affiliation
+
+- party aff and relig aff are not independent
+- 
+
+
 
